@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Admin Panel | Ray Space</title>
+  <link rel="stylesheet" href="/styles/highlight.css">
+  <link rel="stylesheet" href="/styles/style.css">
+  <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+  <meta name="description" content="Admin Panel - Ray Space">
+  <meta name="keywords" content="Admin, Ray Space, Blog Management">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0e0f10">
+</head>
+<body>
+  <div class="sidenav">
+    <div class="logo-wrapper">
+      <img class="logo animated" width="40" src="/images/logo.svg" alt="logo">
+    </div>
+    <a class="sidenav-link" href="/home">home</a>
+    <a class="sidenav-link" href="/about">about</a>
+    <a class="sidenav-link" href="/blog">blog</a>
+    <a class="sidenav-link" href="/guestbook">guestbook</a>
+    <a class="sidenav-link active" href="/admin">admin</a>
+  </div>
+  <div class="content" id="content">
+    <div class="admin-container">
+      <h1>Admin Panel</h1>
+      <div class="admin-status">
+        <p id="admin-status">Checking admin status...</p>
+      </div>
+      <div class="admin-content" id="admin-content" style="display: none;">
+        <div class="admin-section">
+          <h2>Create New Post</h2>
+          <form id="create-post-form" class="admin-form">
+            <div class="form-group">
+              <label for="post-title">Title:</label>
+              <input type="text" id="post-title" name="title" required>
+            </div>
+            <div class="form-group">
+              <label for="post-content">Content (HTML):</label>
+              <textarea id="post-content" name="content" rows="10" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="post-date">Published Date:</label>
+              <input type="date" id="post-date" name="published_date">
+            </div>
+            <button type="submit" class="admin-button">Create Post</button>
+          </form>
+        </div>
+        <div class="admin-section">
+          <h2>Manage Existing Posts</h2>
+          <div id="posts-list" class="posts-list">
+            <p>Loading posts...</p>
+          </div>
+        </div>
+      </div>
+      <div class="admin-login" id="admin-login" style="display: none;">
+        <p>You need to be logged in as an admin to access this panel.</p>
+        <button onclick="handleGithubSignIn(event)" class="admin-button">Sign in with GitHub</button>
+      </div>
+    </div>
+  </div>
+  <script src="/scripts/script.js"></script>
+  <script src="/scripts/highlight.min.js"></script>
+  <script src="/scripts/purify.min.js"></script>
+  <script src="/scripts/admin.js"></script>
+</body>
+</html> 

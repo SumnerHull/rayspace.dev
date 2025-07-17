@@ -1,7 +1,7 @@
 use crate::state::AppState;
 use actix_session::Session;
 use actix_web::{
-    get, post, put, web,
+    get, post, put, web, delete,
     web::{Data, Json},
     HttpResponse, Responder,
 };
@@ -45,6 +45,13 @@ struct Comment {
 #[derive(Deserialize)]
 pub struct CreateComment {
     pub comment: String,
+}
+
+#[derive(Deserialize)]
+pub struct ToolPost {
+    pub title: String,
+    pub content: String,
+    pub published_date: Option<NaiveDate>,
 }
 
 #[get("/github_stars")]
@@ -215,5 +222,53 @@ pub async fn create_comment(
         }
     } else {
         HttpResponse::Unauthorized().body("User must be logged in to create a comment")
+    }
+}
+
+#[post("/tools/posts")]
+pub async fn tool_add_post(
+    post_data: Json<ToolPost>,
+    data: web::Data<AppState>,
+) -> impl Responder {
+    let published_date = post_data.published_date.unwrap_or_else(|| Utc::now().date_naive());
+    match sqlx::query(
+        "INSERT INTO posts (title, published_date, views) VALUES ($1, $2, $3) RETURNING id"
+    )
+    .bind(&post_data.title)
+    .bind(published_date)
+    .bind(0)
+    .fetch_one(&data.db)
+    .await {
+        Ok(row) => {
+            let post_id: i32 = row.try_get(0).unwrap_or(0);
+            // Write HTML file
+            let html_content = format!(
+                r#"<div class='post-container'><h1 class='post-title'>{}</h1><div class='post-content'>{}</div></div>"#,
+                post_data.title, post_data.content
+            );
+            let file_path = format!("./assets/posts/{}.html", post_id);
+            let _ = std::fs::write(&file_path, html_content);
+            HttpResponse::Ok().json(serde_json::json!({"id": post_id}))
+        },
+        Err(e) => HttpResponse::InternalServerError().body(format!("Failed to add post: {}", e)),
+    }
+}
+
+#[delete("/tools/posts/{id}")]
+pub async fn tool_delete_post(
+    info: web::Path<Info>,
+    data: web::Data<AppState>,
+) -> impl Responder {
+    let post_id: i32 = info.id.parse().unwrap_or_default();
+    match sqlx::query("DELETE FROM posts WHERE id = $1")
+        .bind(post_id)
+        .execute(&data.db)
+        .await {
+        Ok(_) => {
+            let file_path = format!("./assets/posts/{}.html", post_id);
+            let _ = std::fs::remove_file(&file_path);
+            HttpResponse::Ok().body("Post deleted")
+        },
+        Err(e) => HttpResponse::InternalServerError().body(format!("Failed to delete post: {}", e)),
     }
 }

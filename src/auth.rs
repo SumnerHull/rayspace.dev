@@ -60,13 +60,14 @@ pub async fn github_oauth_redirect(
     };
 
     let (github_user_id, github_user_name) =
-        match exchange_code_for_user_id(github_client_id, github_client_secret, code).await {
-            Ok(info) => info,
-            Err(_) => {
-                return HttpResponse::InternalServerError()
-                    .body("Internal server error")
-            }
-        };
+    match exchange_code_for_user_id(github_client_id, github_client_secret, code).await {
+        Ok(info) => info,
+        Err(e) => {
+            eprintln!("OAuth error: {:?}", e); // or use log::error! if you prefer
+            return HttpResponse::InternalServerError()
+                .body("Internal server error")
+        }
+    };
 
     if let Err(_) = session.insert("user_id", &github_user_id) {
         return HttpResponse::InternalServerError().body("Internal server error");
@@ -128,12 +129,15 @@ pub async fn exchange_code_for_user_id(
     };
 
     let user_name = match data.get("name").and_then(serde_json::Value::as_str) {
-        Some(name) => name.to_string(),
-        None => {
-            return Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Missing user name",
-            )))
+        Some(name) if !name.is_empty() => name.to_string(),
+        _ => match data.get("login").and_then(serde_json::Value::as_str) {
+            Some(login) => login.to_string(),
+            None => {
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "Missing user name and login",
+                )))
+            }
         }
     };
     Ok((user_id, user_name))

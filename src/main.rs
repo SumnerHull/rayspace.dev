@@ -1,6 +1,7 @@
 mod auth;
 mod services;
 mod state;
+// mod admin; // Remove admin module
 
 use actix_files as fs;
 use actix_session::{CookieSession};
@@ -10,7 +11,9 @@ use dotenv::dotenv;
 use hex;
 use services::{
     create_comment, fetch_comments, fetch_posts, fetch_stars, update_views, user_status,
+    tool_add_post, tool_delete_post,
 };
+// Remove admin imports
 use sqlx::{postgres::PgPoolOptions};
 use state::AppState;
 use std::env;
@@ -20,6 +23,12 @@ use actix_web::middleware::Logger;
 async fn index() -> std::io::Result<fs::NamedFile> {
     fs::NamedFile::open("./assets/index.html")
 }
+
+async fn tools_page() -> std::io::Result<actix_files::NamedFile> {
+    actix_files::NamedFile::open("./assets/pages/tools.html")
+}
+
+// Remove admin_page function
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -60,7 +69,13 @@ async fn main() -> std::io::Result<()> {
                     .service(create_comment)
                     .service(update_views)
                     .service(user_status)
-                    .service(fetch_stars),
+                    .service(fetch_stars)
+                    .service(tool_add_post)
+                    .service(tool_delete_post),
+            )
+            // Remove /admin and /test routes
+            .service(
+                web::resource("/tools").route(web::get().to(tools_page))
             )
             .service(
                 fs::Files::new("/", "./assets")
