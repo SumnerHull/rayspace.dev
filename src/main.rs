@@ -12,8 +12,6 @@ use dotenv::dotenv;
 use hex;
 use services::{
     create_comment, fetch_comments, fetch_posts, fetch_stars, update_views, user_status,
-    tool_add_post, tool_delete_post,
-    admin_fetch_posts, admin_create_post, admin_update_post, admin_delete_post,
 };
 // Remove admin imports
 use sqlx::{postgres::PgPoolOptions};
@@ -88,12 +86,6 @@ fn main() -> std::io::Result<()> {
                         .service(update_views)
                         .service(user_status)
                         .service(fetch_stars)
-                        .service(tool_add_post)
-                        .service(tool_delete_post)
-                        .service(admin_fetch_posts)
-                        .service(admin_create_post)
-                        .service(admin_update_post)
-                        .service(admin_delete_post)
                 )
                 // Remove the /tools route - let JavaScript handle it
                 .service(
