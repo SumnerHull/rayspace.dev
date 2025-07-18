@@ -15,6 +15,18 @@ RUN cargo build --release --bin rayspace_rs
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
+
+# Install OpenSSL and other required libraries
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=builder /app/target/release/rayspace_rs /usr/local/bin
+
+# Create a non-root user for security
+RUN useradd -r -s /bin/false app && chown app:app /usr/local/bin/rayspace_rs
+USER app
+
 ENTRYPOINT ["/usr/local/bin/rayspace_rs"]
