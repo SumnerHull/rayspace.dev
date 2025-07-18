@@ -78,7 +78,7 @@ pub async fn github_oauth_redirect(
     }
 
     HttpResponse::Found()
-        .append_header(("Location", "/guestbook"))
+        .append_header(("Location", "/tools"))
         .finish()
 }
 

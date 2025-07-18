@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Tools.js loaded');
   const addPostForm = document.getElementById('add-post-form');
   const postsList = document.getElementById('posts-list');
   const notAuthorized = document.getElementById('not-authorized');
@@ -6,21 +7,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const githubSignin = document.getElementById('github-signin');
   const logoutBtn = document.getElementById('logout-btn');
 
+  console.log('Elements found:', {
+    addPostForm: !!addPostForm,
+    postsList: !!postsList,
+    notAuthorized: !!notAuthorized,
+    toolsUI: !!toolsUI,
+    githubSignin: !!githubSignin,
+    logoutBtn: !!logoutBtn
+  });
+
   // Check GitHub authentication status
   async function checkAuth() {
     try {
+      console.log('Checking auth status...');
       const res = await fetch('/api/user_status');
       if (!res.ok) throw new Error('Failed to check user status');
       const data = await res.json();
+      console.log('Auth response:', data);
       if (data.authenticated) {
+        console.log('User is authenticated, showing tools UI');
         notAuthorized.style.display = 'none';
         toolsUI.style.display = '';
         fetchPosts();
       } else {
+        console.log('User is not authenticated, showing sign-in button');
         notAuthorized.style.display = '';
         toolsUI.style.display = 'none';
       }
     } catch (e) {
+      console.error('Auth check error:', e);
       notAuthorized.style.display = '';
       toolsUI.style.display = 'none';
     }
@@ -30,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (githubSignin) {
     githubSignin.addEventListener('click', (e) => {
       e.preventDefault();
+      console.log('GitHub sign-in clicked');
       window.location.href = '/auth/start_github_oauth';
     });
   }
@@ -114,5 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Initial load
+  console.log('Starting initial auth check...');
   checkAuth();
 }); 

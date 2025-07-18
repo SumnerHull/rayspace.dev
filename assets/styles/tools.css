@@ -9,6 +9,7 @@ body {
   margin: 40px auto;
   max-width: 600px;
   background: #18191b;
+  min-height: 400px;
 }
 .tools-container h1, .tools-container h2, .tools-container label {
   color: #ff9800;
@@ -58,6 +59,7 @@ body {
 #not-authorized {
   text-align: center;
   padding: 20px;
+  display: block !important;
 }
 #github-signin {
   display: inline-block;

@@ -25,16 +25,7 @@ async fn index() -> std::io::Result<fs::NamedFile> {
     fs::NamedFile::open("./assets/index.html")
 }
 
-async fn tools_page() -> Result<HttpResponse, actix_web::Error> {
-    match std_fs::read_to_string("./assets/pages/tools.html") {
-        Ok(content) => Ok(HttpResponse::Ok()
-            .content_type("text/html; charset=utf-8")
-            .body(content)),
-        Err(_) => Ok(HttpResponse::NotFound().body("Tools page not found"))
-    }
-}
-
-// Remove admin_page function
+// Remove tools_page function since it should be handled by JavaScript routing
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -83,10 +74,7 @@ async fn main() -> std::io::Result<()> {
                     .service(tool_add_post)
                     .service(tool_delete_post),
             )
-            // Remove /admin and /test routes
-            .service(
-                web::resource("/tools").route(web::get().to(tools_page))
-            )
+            // Remove the /tools route - let JavaScript handle it
             .service(
                 fs::Files::new("/", "./assets")
                     .index_file("index.html")
