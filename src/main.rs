@@ -21,7 +21,7 @@ use state::AppState;
 use std::env;
 use env_logger;
 use actix_web::middleware::Logger;
-use std::fs as std_fs;
+// use std::fs as std_fs; // Remove if unused
 
 async fn index() -> std::io::Result<fs::NamedFile> {
     fs::NamedFile::open("./assets/index.html")
@@ -35,12 +35,12 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
     
     // Initialize Sentry
-    let _guard = sentry::init((
-        "https://3a92ba62a6165a73da3081b74837a14c@o4509686868017152.ingest.us.sentry.io/4509686883090432",
-        sentry::ClientOptions::default()
-            .send_default_pii(true)
-            .traces_sample_rate(1.0)
-    ));
+    let _guard = sentry::init(sentry::ClientOptions {
+        dsn: Some("https://3a92ba62a6165a73da3081b74837a14c@o4509686868017152.ingest.us.sentry.io/4509686883090432".parse().unwrap()),
+        send_default_pii: true,
+        traces_sample_rate: 1.0,
+        ..Default::default()
+    });
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
         .max_connections(12)
@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(SentryMiddleware::new())
+            .wrap(SentryMiddleware::default())
             .wrap(
                 CookieSession::private(&secret_key)
                     .secure(true)
