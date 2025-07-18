@@ -16,8 +16,8 @@ RUN cargo build --release --bin rayspace_rs
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
 
-# Install OpenSSL
-RUN apt-get update && apt-get install -y libssl3 && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL and CA certificates
+RUN apt-get update && apt-get install -y libssl3 ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
