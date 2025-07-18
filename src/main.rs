@@ -5,7 +5,7 @@ mod state;
 
 use actix_files as fs;
 use actix_session::{CookieSession};
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, App, HttpServer, HttpResponse};
 use auth::auth_routes;
 use dotenv::dotenv;
 use hex;
@@ -19,13 +19,19 @@ use state::AppState;
 use std::env;
 use env_logger;
 use actix_web::middleware::Logger;
+use std::fs as std_fs;
 
 async fn index() -> std::io::Result<fs::NamedFile> {
     fs::NamedFile::open("./assets/index.html")
 }
 
-async fn tools_page() -> std::io::Result<actix_files::NamedFile> {
-    actix_files::NamedFile::open("./assets/pages/tools.html")
+async fn tools_page() -> Result<HttpResponse, actix_web::Error> {
+    match std_fs::read_to_string("./assets/pages/tools.html") {
+        Ok(content) => Ok(HttpResponse::Ok()
+            .content_type("text/html; charset=utf-8")
+            .body(content)),
+        Err(_) => Ok(HttpResponse::NotFound().body("Tools page not found"))
+    }
 }
 
 // Remove admin_page function
