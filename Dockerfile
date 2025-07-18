@@ -24,7 +24,7 @@ WORKDIR /app
 # Copy the binary
 COPY --from=builder /app/target/release/rayspace_rs /usr/local/bin
 
-# Copy assets directory (ADD THIS LINE)
+# Copy assets directory
 COPY --from=builder /app/assets ./assets
 
 ENTRYPOINT ["/usr/local/bin/rayspace_rs"]
