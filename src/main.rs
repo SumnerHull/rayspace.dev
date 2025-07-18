@@ -13,6 +13,7 @@ use hex;
 use services::{
     create_comment, fetch_comments, fetch_posts, fetch_stars, update_views, user_status,
     tool_add_post, tool_delete_post,
+    admin_fetch_posts, admin_create_post, admin_update_post, admin_delete_post,
 };
 // Remove admin imports
 use sqlx::{postgres::PgPoolOptions};
