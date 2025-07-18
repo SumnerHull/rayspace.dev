@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(SentryMiddleware::default())
+            .wrap(SentryMiddleware)
             .wrap(
                 CookieSession::private(&secret_key)
                     .secure(true)
