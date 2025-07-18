@@ -49,6 +49,10 @@ async fn main() -> std::io::Result<()> {
         hex::decode(secret_key_hex).expect("SECRET_KEY must be a hex-encoded byte array");
     let app_state = web::Data::new(AppState::new(github_client_id, github_client_secret, pool));
 
+    // Get port from environment or default to 8080 for Fly.io
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let addr = format!("0.0.0.0:{}", port);
+
     HttpServer::new(move || {
         App::new()
             .wrap(
@@ -84,7 +88,7 @@ async fn main() -> std::io::Result<()> {
             )
             .default_service(web::route().to(index))
     })
-    .bind("0.0.0.0:3000")?
+    .bind(addr)?
     .run()
     .await
 }
