@@ -25,10 +25,32 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       console.log('Auth response:', data);
       if (data.authenticated) {
-        console.log('User is authenticated, showing tools UI');
-        notAuthorized.style.display = 'none';
-        toolsUI.style.display = '';
-        fetchPosts();
+        // Check if user is admin
+        const adminRes = await fetch('/api/admin/posts');
+        if (adminRes.ok) {
+          console.log('User is admin, showing tools UI');
+          notAuthorized.style.display = 'none';
+          toolsUI.style.display = '';
+          fetchPosts();
+        } else {
+          // User is authenticated but not admin
+          notAuthorized.style.display = '';
+          toolsUI.style.display = 'none';
+          notAuthorized.innerHTML = `
+            <h2>Not Authorized</h2>
+            <p>You are signed in, but you are <b>not an admin</b> and cannot access this page.</p>
+            <button id="logout-btn" class="admin-button">Logout</button>
+          `;
+          // Attach logout handler
+          const logoutBtn = document.getElementById('logout-btn');
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              await fetch('/auth/logout', { method: 'POST' });
+              checkAuth();
+            });
+          }
+        }
       } else {
         console.log('User is not authenticated, showing sign-in button');
         notAuthorized.style.display = '';
