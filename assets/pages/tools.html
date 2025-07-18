@@ -1,62 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tools | Ray Space</title>
-  <link rel="stylesheet" href="/styles/highlight.css">
-  <link rel="stylesheet" href="/styles/style.css">
-  <link rel="stylesheet" href="/styles/tools.css">
-  <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
-</head>
-<body>
-  <div class="sidenav">
-    <div class="logo-wrapper">
-      <img class="logo animated" width="40" src="/images/logo.svg" alt="logo">
-    </div>
-    <a class="sidenav-link" href="/home">home</a>
-    <a class="sidenav-link" href="/about">about</a>
-    <a class="sidenav-link" href="/blog">blog</a>
-    <a class="sidenav-link" href="/guestbook">guestbook</a>
-    <a class="sidenav-link active" href="/tools">tools</a>
+<div class="tools-container">
+  <div id="not-authorized" style="display:none;">
+    <h2>Not Authorized</h2>
+    <p>You must be signed in with GitHub to access this page.</p>
+    <button id="github-signin" class="admin-button">Sign in with GitHub</button>
   </div>
-  <div class="content" id="content">
-    <div class="tools-container">
-      <div id="not-authorized" style="display:none;">
-        <h2>Not Authorized</h2>
-        <p>You must be signed in with GitHub to access this page.</p>
-        <button id="github-signin" class="admin-button">Sign in with GitHub</button>
+  <div id="tools-ui" style="display:none;">
+    <h1>Blog Tools</h1>
+    <button id="logout-btn" class="admin-button" style="float:right;">Logout</button>
+    <section>
+      <h2>Add Blog Post</h2>
+      <form id="add-post-form" class="admin-form">
+        <div class="form-group">
+          <label for="post-title">Title:</label>
+          <input type="text" id="post-title" name="title" required>
+        </div>
+        <div class="form-group">
+          <label for="post-content">Content (HTML):</label>
+          <textarea id="post-content" name="content" rows="8" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="post-date">Published Date:</label>
+          <input type="date" id="post-date" name="published_date">
+        </div>
+        <button type="submit" class="admin-button">Add Post</button>
+      </form>
+    </section>
+    <section>
+      <h2>Existing Blog Posts</h2>
+      <div id="posts-list">
+        <p>Loading posts...</p>
       </div>
-      <div id="tools-ui" style="display:none;">
-        <h1>Blog Tools</h1>
-        <button id="logout-btn" class="admin-button" style="float:right;">Logout</button>
-        <section>
-          <h2>Add Blog Post</h2>
-          <form id="add-post-form" class="admin-form">
-            <div class="form-group">
-              <label for="post-title">Title:</label>
-              <input type="text" id="post-title" name="title" required>
-            </div>
-            <div class="form-group">
-              <label for="post-content">Content (HTML):</label>
-              <textarea id="post-content" name="content" rows="8" required></textarea>
-            </div>
-            <div class="form-group">
-              <label for="post-date">Published Date:</label>
-              <input type="date" id="post-date" name="published_date">
-            </div>
-            <button type="submit" class="admin-button">Add Post</button>
-          </form>
-        </section>
-        <section>
-          <h2>Existing Blog Posts</h2>
-          <div id="posts-list">
-            <p>Loading posts...</p>
-          </div>
-        </section>
-      </div>
-    </div>
+    </section>
   </div>
-  <script src="/scripts/tools.js"></script>
-</body>
-</html> 
+</div> 

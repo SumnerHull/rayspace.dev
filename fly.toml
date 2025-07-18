@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for rayspace-dev on 2025-07-17T16:57:37-04:00
+# fly.toml app configuration file generated for rayspace-dev-wandering-shadow-7873 on 2025-07-17T19:11:46-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'rayspace-dev'
+app = 'rayspace-dev-wandering-shadow-7873'
 primary_region = 'ord'
 
 [build]

@@ -54,6 +54,17 @@ body {
   background: #ffb74d;
   color: #18191b;
 }
+/* Fix for GitHub sign-in button positioning */
+#not-authorized {
+  text-align: center;
+  padding: 20px;
+}
+#github-signin {
+  display: inline-block;
+  margin: 20px auto;
+  padding: 12px 24px;
+  font-size: 16px;
+}
 .tools-container .admin-post-item {
   background: #202327;
   border-radius: 6px;
