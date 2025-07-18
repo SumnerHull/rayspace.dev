@@ -6,6 +6,8 @@ mod state;
 use actix_files as fs;
 use actix_session::{CookieSession};
 use actix_web::{web, App, HttpServer, HttpResponse};
+use sentry::{init, ClientOptions};
+use sentry_actix::SentryMiddleware;
 use auth::auth_routes;
 use dotenv::dotenv;
 use hex;
@@ -31,6 +33,14 @@ async fn index() -> std::io::Result<fs::NamedFile> {
 async fn main() -> std::io::Result<()> {
     env_logger::init();
     dotenv().ok();
+    
+    // Initialize Sentry
+    let _guard = sentry::init((
+        "https://3a92ba62a6165a73da3081b74837a14c@o4509686868017152.ingest.us.sentry.io/4509686883090432",
+        sentry::ClientOptions::default()
+            .send_default_pii(true)
+            .traces_sample_rate(1.0)
+    ));
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = PgPoolOptions::new()
         .max_connections(12)
@@ -52,6 +62,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(SentryMiddleware::new())
             .wrap(
                 CookieSession::private(&secret_key)
                     .secure(true)

@@ -5,6 +5,7 @@ use actix_web::{
     web::{Data, Json},
     HttpResponse, Responder,
 };
+use sentry;
 
 use chrono::NaiveDate;
 use chrono::{DateTime, Utc};
@@ -90,11 +91,15 @@ pub async fn fetch_stars(data: web::Data<AppState>) -> impl Responder {
 
                 HttpResponse::Ok().json(serde_json::json!({ "stars": repo.stargazers_count }))
             }
-            Err(_) => {
+            Err(e) => {
+                sentry::capture_error(&e);
                 HttpResponse::InternalServerError().json("An error occurred")
             }
         },
-        Err(_) => HttpResponse::InternalServerError().json("An error occurred"),
+        Err(e) => {
+            sentry::capture_error(&e);
+            HttpResponse::InternalServerError().json("An error occurred")
+        },
     }
 }
 
@@ -143,7 +148,8 @@ pub async fn fetch_posts(state: Data<AppState>) -> impl Responder {
                 HttpResponse::Ok().json(posts)
             }
         }
-        Err(_) => {
+        Err(e) => {
+            sentry::capture_error(&e);
             HttpResponse::InternalServerError().json("An error occurred")
         }
     }

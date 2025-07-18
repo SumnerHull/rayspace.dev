@@ -23,3 +23,5 @@ chrono = { version = "0.4.26", features = ["serde"] }
 ammonia = "3.3.0"
 env_logger = "0.9"
 log = "0.4"
+sentry = "0.36"
+sentry-actix = "0.36"
