@@ -25,6 +25,10 @@ async fn index() -> std::io::Result<fs::NamedFile> {
     fs::NamedFile::open("./assets/index.html")
 }
 
+async fn not_found() -> actix_web::HttpResponse {
+    actix_web::HttpResponse::NotFound().body("404 Not Found")
+}
+
 // Remove tools_page function since it should be handled by JavaScript routing
 
 fn main() -> std::io::Result<()> {
@@ -87,6 +91,7 @@ fn main() -> std::io::Result<()> {
                         .service(user_status)
                         .service(fetch_stars)
                 )
+                .route("/tools", web::get().to(not_found))
                 // Remove the /tools route - let JavaScript handle it
                 .service(
                     fs::Files::new("/", "./assets")
