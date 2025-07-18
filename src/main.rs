@@ -1,7 +1,6 @@
 mod auth;
 mod services;
 mod state;
-mod admin;
 
 use actix_files as fs;
 use actix_session::{CookieSession};
@@ -15,7 +14,6 @@ use services::{
     create_comment, fetch_comments, fetch_posts, fetch_stars, update_views, user_status,
     tool_add_post, tool_delete_post,
 };
-use admin::{admin_fetch_posts, create_post as admin_create_post, update_post as admin_update_post, delete_post as admin_delete_post};
 // Remove admin imports
 use sqlx::{postgres::PgPoolOptions};
 use state::AppState;
