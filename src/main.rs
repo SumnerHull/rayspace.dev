@@ -4,7 +4,7 @@ mod state;
 
 use actix_files as fs;
 use actix_session::{CookieSession};
-use actix_web::{web, App, HttpServer, HttpResponse};
+use actix_web::{web, App, HttpServer};
 use sentry;
 use sentry::integrations::actix;
 use auth::auth_routes;
