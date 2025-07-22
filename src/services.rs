@@ -1,6 +1,6 @@
 use crate::state::AppState;
 use actix_session::Session;
-use actix_web::{get, post, put, web, HttpResponse, Responder};
+use actix_web::{get, post, put, delete, web, HttpResponse, Responder};
 use chrono::{NaiveDate, DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{self, FromRow, Row};
@@ -38,6 +38,20 @@ struct Comment {
 #[derive(Deserialize)]
 pub struct CreateComment {
     pub comment: String,
+}
+
+#[derive(Deserialize)]
+pub struct CreatePost {
+    pub title: String,
+    pub content: String,
+    pub published_date: NaiveDate,
+}
+
+#[derive(Deserialize)]
+pub struct UpdatePost {
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub published_date: Option<NaiveDate>,
 }
 
 
@@ -212,5 +226,155 @@ pub async fn create_comment(
         }
     } else {
         HttpResponse::Unauthorized().body("User must be logged in to create a comment")
+    }
+}
+
+fn is_admin(session: &Session) -> bool {
+    if let Ok(Some(user_id)) = session.get::<String>("user_id") {
+        user_id == "156246723"
+    } else {
+        false
+    }
+}
+
+#[post("/admin/posts")]
+pub async fn create_post(
+    session: Session,
+    post_data: web::Json<CreatePost>,
+    data: web::Data<AppState>,
+) -> impl Responder {
+    if !is_admin(&session) {
+        return HttpResponse::Unauthorized().json("Admin access required");
+    }
+
+    match sqlx::query("INSERT INTO posts (title, published_date, views) VALUES ($1, $2, 0) RETURNING id")
+        .bind(&post_data.title)
+        .bind(&post_data.published_date)
+        .fetch_one(&data.db)
+        .await
+    {
+        Ok(row) => {
+            let post_id: i32 = row.get(0);
+            
+            let html_content = format!(
+                "<div class='post-container'><h1 class='post-title'>{}</h1><div class='post-content'>{}</div></div>",
+                post_data.title, post_data.content
+            );
+            
+            if std::fs::write(format!("./assets/posts/{}.html", post_id), html_content).is_err() {
+                return HttpResponse::InternalServerError().json("Failed to create post file");
+            }
+            
+            HttpResponse::Ok().json(serde_json::json!({ "id": post_id, "message": "Post created successfully" }))
+        }
+        Err(_) => HttpResponse::InternalServerError().json("Failed to create post")
+    }
+}
+
+#[put("/admin/posts/{id}")]
+pub async fn update_post(
+    session: Session,
+    path: web::Path<i32>,
+    post_data: web::Json<UpdatePost>,
+    data: web::Data<AppState>,
+) -> impl Responder {
+    if !is_admin(&session) {
+        return HttpResponse::Unauthorized().json("Admin access required");
+    }
+
+    let post_id = path.into_inner();
+    
+    if let Some(title) = &post_data.title {
+        if sqlx::query("UPDATE posts SET title = $1 WHERE id = $2")
+            .bind(title)
+            .bind(post_id)
+            .execute(&data.db)
+            .await
+            .is_err()
+        {
+            return HttpResponse::InternalServerError().json("Failed to update post title");
+        }
+    }
+    
+    if let Some(date) = &post_data.published_date {
+        if sqlx::query("UPDATE posts SET published_date = $1 WHERE id = $2")
+            .bind(date)
+            .bind(post_id)
+            .execute(&data.db)
+            .await
+            .is_err()
+        {
+            return HttpResponse::InternalServerError().json("Failed to update post date");
+        }
+    }
+    
+    if let Some(content) = &post_data.content {
+        let title = if let Some(t) = &post_data.title {
+            t.clone()
+        } else {
+            match sqlx::query("SELECT title FROM posts WHERE id = $1")
+                .bind(post_id)
+                .fetch_one(&data.db)
+                .await
+            {
+                Ok(row) => row.get(0),
+                Err(_) => "Post Title".to_string()
+            }
+        };
+        
+        let html_content = format!(
+            "<div class='post-container'><h1 class='post-title'>{}</h1><div class='post-content'>{}</div></div>",
+            title, content
+        );
+        
+        if std::fs::write(format!("./assets/posts/{}.html", post_id), html_content).is_err() {
+            return HttpResponse::InternalServerError().json("Failed to update post file");
+        }
+    }
+    
+    HttpResponse::Ok().json("Post updated successfully")
+}
+
+#[delete("/admin/posts/{id}")]
+pub async fn delete_post(
+    session: Session,
+    path: web::Path<i32>,
+    data: web::Data<AppState>,
+) -> impl Responder {
+    if !is_admin(&session) {
+        return HttpResponse::Unauthorized().json("Admin access required");
+    }
+
+    let post_id = path.into_inner();
+    
+    match sqlx::query("DELETE FROM posts WHERE id = $1")
+        .bind(post_id)
+        .execute(&data.db)
+        .await
+    {
+        Ok(_) => {
+            if std::fs::remove_file(format!("./assets/posts/{}.html", post_id)).is_err() {
+                return HttpResponse::InternalServerError().json("Failed to delete post file");
+            }
+            HttpResponse::Ok().json("Post deleted successfully")
+        }
+        Err(_) => HttpResponse::InternalServerError().json("Failed to delete post")
+    }
+}
+
+#[get("/admin/posts/{id}")]
+pub async fn get_post_content(
+    session: Session,
+    path: web::Path<i32>,
+) -> impl Responder {
+    if !is_admin(&session) {
+        return HttpResponse::Unauthorized().json("Admin access required");
+    }
+
+    let post_id = path.into_inner();
+    
+    match std::fs::read_to_string(format!("./assets/posts/{}.html", post_id)) {
+        Ok(content) => HttpResponse::Ok().json(serde_json::json!({ "content": content })),
+        Err(_) => HttpResponse::NotFound().json("Post content not found")
     }
 }

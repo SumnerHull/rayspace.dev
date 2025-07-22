@@ -734,3 +734,67 @@ blockquote span {
 .gap-4 {
   gap: 1rem;
 }
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  border: 1px solid var(--primary-color);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.input-container {
+  margin-bottom: 1.5rem;
+}
+
+.input-form[type="date"] {
+  max-width: 200px;
+}
+
+textarea.input-form {
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.post-list-item .flex {
+  margin-top: 1rem;
+}
+
+.post-list-item h3 {
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.post-list-item p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}

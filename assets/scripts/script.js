@@ -242,6 +242,7 @@ function loadPageContent(path) {
     "/blog": "./pages/blog.html",
     "/resume": "./pages/resume.html",
     "/tools": "./pages/tools.html",
+    "/admin": "./pages/admin.html",
     "/404": "./pages/404.html"
   };
   
@@ -571,6 +572,117 @@ navLinks.forEach(link => {
   });
 });
 
+let tinymceEditor = null;
+let currentEditingId = null;
+
+async function initTinyMCE() {
+  if (typeof tinymce === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js';
+    script.referrerpolicy = 'origin';
+    document.head.appendChild(script);
+    
+    script.onload = () => {
+      tinymce.init({
+        selector: '#post-content',
+        height: 400,
+        menubar: false,
+        plugins: [
+          'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+          'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+          'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        content_style: 'body { font-family: Inter, sans-serif; font-size: 16px; }'
+      });
+    };
+  }
+}
+
+function showCreateForm() {
+  document.getElementById('post-form').classList.remove('hidden');
+  document.getElementById('posts-list').classList.add('hidden');
+  document.getElementById('form-title').textContent = 'Create New Post';
+  document.getElementById('admin-post-form').reset();
+  currentEditingId = null;
+  initTinyMCE();
+}
+
+function hidePostForm() {
+  document.getElementById('post-form').classList.add('hidden');
+  if (typeof tinymce !== 'undefined') {
+    tinymce.remove('#post-content');
+  }
+}
+
+async function loadPostsList() {
+  try {
+    const response = await fetch('/api/posts');
+    const posts = await response.json();
+    
+    const container = document.getElementById('posts-container');
+    container.innerHTML = posts.map(post => `
+      <div class="post-list-item">
+        <h3>${post.title}</h3>
+        <p>Published: ${post.published_date} | Views: ${post.views}</p>
+        <div class="flex gap-4 mt-2">
+          <button class="btn btn-secondary" onclick="editPost(${post.id})">Edit</button>
+          <button class="btn" style="background: #ef4444; color: white;" onclick="deletePost(${post.id})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+    
+    document.getElementById('posts-list').classList.remove('hidden');
+    document.getElementById('post-form').classList.add('hidden');
+  } catch (error) {
+    console.error('Failed to load posts:', error);
+  }
+}
+
+async function editPost(id) {
+  try {
+    const [postResponse, contentResponse] = await Promise.all([
+      fetch('/api/posts'),
+      fetch(`/api/admin/posts/${id}`)
+    ]);
+    
+    const posts = await postResponse.json();
+    const contentData = await contentResponse.json();
+    const post = posts.find(p => p.id === id);
+    
+    if (post) {
+      document.getElementById('post-title').value = post.title;
+      document.getElementById('post-date').value = post.published_date;
+      
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(contentData.content, 'text/html');
+      const contentDiv = doc.querySelector('.post-content');
+      document.getElementById('post-content').value = contentDiv ? contentDiv.innerHTML : '';
+      
+      document.getElementById('form-title').textContent = 'Edit Post';
+      currentEditingId = id;
+      showCreateForm();
+    }
+  } catch (error) {
+    console.error('Failed to load post for editing:', error);
+  }
+}
+
+async function deletePost(id) {
+  if (confirm('Are you sure you want to delete this post?')) {
+    try {
+      const response = await fetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        loadPostsList();
+      } else {
+        alert('Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+    }
+  }
+}
+
 // Mobile menu toggle
 const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
 const navMenu = document.querySelector('.nav-menu');
@@ -581,3 +693,41 @@ if (mobileMenuToggle && navMenu) {
     mobileMenuToggle.classList.toggle('active');
   });
 }
+
+// Initialize admin form handler
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById('admin-post-form');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('post-title').value;
+      const date = document.getElementById('post-date').value;
+      const content = typeof tinymce !== 'undefined' && tinymce.get('post-content') 
+        ? tinymce.get('post-content').getContent() 
+        : document.getElementById('post-content').value;
+      
+      const postData = { title, published_date: date, content };
+      
+      try {
+        const url = currentEditingId ? `/api/admin/posts/${currentEditingId}` : '/api/admin/posts';
+        const method = currentEditingId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(postData)
+        });
+        
+        if (response.ok) {
+          hidePostForm();
+          loadPostsList();
+        } else {
+          alert('Failed to save post');
+        }
+      } catch (error) {
+        console.error('Failed to save post:', error);
+      }
+    });
+  }
+});
