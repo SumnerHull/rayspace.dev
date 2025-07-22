@@ -21,7 +21,7 @@ pub async fn start_github_oauth(_session: Session, data: web::Data<AppState>) ->
     let AppState {
         github_client_id,
         ..
-    } = &*data.get_ref();
+    } = &**data;
 
     let state = generate_secure_random_string(20);
     _session.insert("oauth_state", &state).expect("Failed to set state");
@@ -41,14 +41,14 @@ pub async fn github_oauth_redirect(
         github_client_id,
         github_client_secret,
         ..
-    } = &*data.get_ref();
+    } = &**data;
 
     let received_state = match params.get("state") {
         Some(state) => state,
         None => return HttpResponse::BadRequest().body("Parameter error"),
     };
 
-    let stored_state: String = session.get::<String>("oauth_state").unwrap_or_else(|_| None).unwrap_or_else(|| "".to_string());
+    let stored_state: String = session.get::<String>("oauth_state").unwrap_or(None).unwrap_or_default();
 
     if stored_state != *received_state {
         return HttpResponse::BadRequest().body("Parameter error");
@@ -63,17 +63,17 @@ pub async fn github_oauth_redirect(
     match exchange_code_for_user_id(github_client_id, github_client_secret, code).await {
         Ok(info) => info,
         Err(e) => {
-            eprintln!("OAuth error: {:?}", e); // or use log::error! if you prefer
+            eprintln!("OAuth error: {e:?}"); // or use log::error! if you prefer
             return HttpResponse::InternalServerError()
                 .body("Internal server error")
         }
     };
 
-    if let Err(_) = session.insert("user_id", &github_user_id) {
+    if session.insert("user_id", &github_user_id).is_err() {
         return HttpResponse::InternalServerError().body("Internal server error");
     }
 
-    if let Err(_) = session.insert("user_name", &github_user_name) {
+    if session.insert("user_name", &github_user_name).is_err() {
         return HttpResponse::InternalServerError().body("Internal server error");
     }
 
@@ -103,10 +103,7 @@ pub async fn exchange_code_for_user_id(
     let access_token = match data.get("access_token").and_then(serde_json::Value::as_str) {
         Some(token) => token,
         None => {
-            return Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Missing token",
-            )))
+            return Err(Box::new(std::io::Error::other("Missing token")))
         }
     };
 
@@ -121,10 +118,7 @@ pub async fn exchange_code_for_user_id(
     let user_id = match data.get("id").and_then(serde_json::Value::as_u64) {
         Some(id) => id.to_string(),
         None => {
-            return Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Missing user ID",
-            )))
+            return Err(Box::new(std::io::Error::other("Missing user ID")))
         }
     };
 
@@ -133,10 +127,7 @@ pub async fn exchange_code_for_user_id(
         _ => match data.get("login").and_then(serde_json::Value::as_str) {
             Some(login) => login.to_string(),
             None => {
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Missing user name and login",
-                )))
+                return Err(Box::new(std::io::Error::other("Missing user name and login")))
             }
         }
     };
@@ -154,10 +145,7 @@ fn generate_secure_random_string(length: usize) -> String {
 pub fn generate_oauth_url(client_id: String, state: String) -> String {
     let redirect_uri = env::var("REDIRECT_URI").expect("Environment variable error");
     format!(
-        "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&state={}&scope=read:user%20user:email",
-        client_id,
-        redirect_uri,
-        state
+        "https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&state={state}&scope=read:user%20user:email"
     )
 }
 

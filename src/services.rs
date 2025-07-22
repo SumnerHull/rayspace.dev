@@ -1,7 +1,6 @@
 use crate::state::AppState;
 use actix_session::Session;
-use actix_web::{get, post, put, delete, web, HttpResponse, Responder};
-use sentry;
+use actix_web::{get, post, put, web, HttpResponse, Responder};
 use chrono::{NaiveDate, DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{self, FromRow, Row};
@@ -41,34 +40,26 @@ pub struct CreateComment {
     pub comment: String,
 }
 
-#[derive(Deserialize)]
-pub struct ToolPost {
-    pub title: String,
-    pub content: String,
-    pub published_date: Option<NaiveDate>,
-}
 
 #[get("/github_stars")]
 pub async fn fetch_stars(data: web::Data<AppState>) -> impl Responder {
-    let cache = data.star_cache.read().expect("Failed to acquire read lock");
-    if Utc::now()
-        .signed_duration_since(cache.last_fetched)
-        .num_minutes()
-        < 15
-    {
-        return HttpResponse::Ok().json(serde_json::json!({ "stars": cache.star_count }));
+    let (should_fetch, current_stars) = {
+        let cache = data.star_cache.read().expect("Failed to acquire read lock");
+        let should_fetch = Utc::now()
+            .signed_duration_since(cache.last_fetched)
+            .num_minutes() >= 15;
+        (should_fetch, cache.star_count)
+    };
+
+    if !should_fetch {
+        return HttpResponse::Ok().json(serde_json::json!({ "stars": current_stars }));
     }
-    drop(cache);
 
     let client = reqwest::Client::new();
     let owner = env::var("GITHUB_OWNER").unwrap_or_else(|_| String::from("rx0a"));
     let repo = env::var("GITHUB_REPO").unwrap_or_else(|_| String::from("rayspace.dev"));
 
-    let request_url = format!(
-        "https://api.github.com/repos/{owner}/{repo}",
-        owner = owner,
-        repo = repo
-    );
+    let request_url = format!("https://api.github.com/repos/{owner}/{repo}");
 
     match client
         .get(&request_url)

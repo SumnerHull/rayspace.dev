@@ -5,11 +5,9 @@ mod state;
 use actix_files as fs;
 use actix_session::{CookieSession};
 use actix_web::{web, App, HttpServer};
-use sentry;
 use sentry::integrations::actix;
 use auth::auth_routes;
 use dotenv::dotenv;
-use hex;
 use services::{
     create_comment, fetch_comments, fetch_posts, fetch_stars, update_views, user_status,
 };
@@ -17,9 +15,7 @@ use services::{
 use sqlx::{postgres::PgPoolOptions};
 use state::AppState;
 use std::env;
-use env_logger;
 use actix_web::middleware::Logger;
-// use std::fs as std_fs; // Remove if unused
 
 async fn index() -> std::io::Result<fs::NamedFile> {
     fs::NamedFile::open("./assets/index.html")
@@ -61,7 +57,7 @@ fn main() -> std::io::Result<()> {
 
         // Get port from environment or default to 8080 for Fly.io
         let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
-        let addr = format!("0.0.0.0:{}", port);
+        let addr = format!("0.0.0.0:{port}");
 
         HttpServer::new(move || {
             App::new()

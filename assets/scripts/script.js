@@ -7,12 +7,27 @@ let isPageFirstLoaded = true;
 const root = "https://rayspace.dev";
 const navLinks = document.querySelectorAll(".nav-menu .nav-link");
 
-// Fetch total views for stats
+let postsCache = null;
+let postsCacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000;
+
+async function fetchPostsWithCache() {
+  const now = Date.now();
+  if (postsCache && postsCacheTime && (now - postsCacheTime) < CACHE_DURATION) {
+    return postsCache;
+  }
+  
+  const response = await fetch("/api/posts");
+  if (!response.ok) throw new Error("Failed to fetch posts");
+  
+  postsCache = await response.json();
+  postsCacheTime = now;
+  return postsCache;
+}
+
 async function fetchTotalViews() {
   try {
-    const response = await fetch("/api/posts");
-    if (!response.ok) throw new Error("Failed to fetch total views.");
-    const posts = await response.json();
+    const posts = await fetchPostsWithCache();
     const totalViews = posts.reduce((sum, post) => sum + post.views, 0);
     const element = document.querySelector("#blogViewsCount");
     if (element) {
@@ -110,10 +125,9 @@ async function logout() {
 
 // Fetch metadata and set active link
 async function fetchMetadataAndSetActiveLink(path) {
-  const response = await fetch("/api/posts");
+  const posts = await fetchPostsWithCache();
   let activeLink;
   
-  const posts = await response.json();
   const blogPaths = posts.map(post => `/blog/${convertToDashed(post.title)}`);
   
   if (blogPaths.includes(path)) {
@@ -142,10 +156,7 @@ async function loadPage(path) {
     const currentPath = path || window.location.pathname;
     
     if (currentPath.startsWith("/blog")) {
-      const response = await fetch("/api/posts");
-      if (!response.ok) throw new Error("Failed to fetch blog posts");
-      
-      const posts = await response.json();
+      const posts = await fetchPostsWithCache();
       const blogPaths = posts.map(post => `/blog/${convertToDashed(post.title)}`);
       
       if (blogPaths.includes(currentPath)) {
@@ -418,10 +429,7 @@ function copyToClipboard() {
 // Fetch metadata for blog posts
 async function fetchMetadata() {
   try {
-    const response = await fetch("/api/posts");
-    if (!response.ok) throw new Error("Network response was not ok.");
-    
-    const posts = await response.json();
+    const posts = await fetchPostsWithCache();
     posts.sort((a, b) => a.id - b.id);
     
     const titles = posts.map(post => post.title);
