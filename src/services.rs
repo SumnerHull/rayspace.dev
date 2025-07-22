@@ -130,7 +130,7 @@ pub async fn user_status(session: Session) -> impl Responder {
 
 #[get("/posts")]
 pub async fn fetch_posts(state: web::Data<AppState>) -> impl Responder {
-    match sqlx::query_as::<_, Post>("SELECT * FROM posts")
+    match sqlx::query_as::<_, Post>("SELECT id, title, published_date, views FROM posts")
         .fetch_all(&state.db)
         .await
     {
