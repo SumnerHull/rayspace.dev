@@ -1,0 +1,40 @@
+<div class="content-card fade-in">
+  <h1>Blog Administration</h1>
+  <p>Create, edit, and manage blog posts.</p>
+  
+  <div class="admin-actions mt-4">
+    <button class="btn btn-primary" onclick="showCreateForm()">Create New Post</button>
+    <button class="btn btn-secondary" onclick="loadPostsList()">Manage Posts</button>
+  </div>
+  
+  <div id="post-form" class="hidden mt-6">
+    <h2 id="form-title">Create New Post</h2>
+    <form id="admin-post-form">
+      <div class="input-container">
+        <label for="post-title">Title:</label>
+        <input type="text" id="post-title" class="input-form" required>
+      </div>
+      
+      <div class="input-container">
+        <label for="post-date">Published Date:</label>
+        <input type="date" id="post-date" class="input-form" required>
+      </div>
+      
+      <div class="input-container">
+        <label for="post-content">Content:</label>
+        <textarea id="post-content" class="input-form" style="min-height: 400px;"></textarea>
+      </div>
+      
+      <div class="flex gap-4 mt-4">
+        <button type="submit" class="btn btn-primary">Save Post</button>
+        <button type="button" class="btn btn-secondary" onclick="hidePostForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+  
+  <div id="posts-list" class="hidden mt-6">
+    <h2>Existing Posts</h2>
+    <div id="posts-container">
+    </div>
+  </div>
+</div>

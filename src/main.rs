@@ -10,6 +10,7 @@ use auth::auth_routes;
 use dotenv::dotenv;
 use services::{
     create_comment, fetch_comments, fetch_posts, fetch_stars, update_views, user_status,
+    create_post, update_post, delete_post, get_post_content,
 };
 // Remove admin imports
 use sqlx::{postgres::PgPoolOptions};
@@ -86,6 +87,10 @@ fn main() -> std::io::Result<()> {
                         .service(update_views)
                         .service(user_status)
                         .service(fetch_stars)
+                        .service(create_post)
+                        .service(update_post)
+                        .service(delete_post)
+                        .service(get_post_content)
                 )
                 .route("/tools", web::get().to(not_found))
                 // Remove the /tools route - let JavaScript handle it
