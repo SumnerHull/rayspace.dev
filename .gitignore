@@ -1,0 +1,21 @@
+# Environment variables
+.env
+
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Posts directory (will be created at runtime)
+/posts/
