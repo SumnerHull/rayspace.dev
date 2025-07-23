@@ -19,7 +19,7 @@ use std::env;
 use actix_web::middleware::Logger;
 
 async fn index() -> std::io::Result<fs::NamedFile> {
-    fs::NamedFile::open("./assets/index.html")
+    fs::NamedFile::open("./frontend/out/index.html")
 }
 
 async fn not_found() -> actix_web::HttpResponse {
@@ -95,7 +95,7 @@ fn main() -> std::io::Result<()> {
                 .route("/tools", web::get().to(not_found))
                 // Remove the /tools route - let JavaScript handle it
                 .service(
-                    fs::Files::new("/", "./assets")
+                    fs::Files::new("/", "./frontend/out")
                         .index_file("index.html")
                         .use_last_modified(true),
                 )
