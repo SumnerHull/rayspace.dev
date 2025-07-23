@@ -225,6 +225,21 @@ async function handleFormSubmit(e) {
     const date = document.getElementById('post-date').value;
     const content = tinymceEditor ? tinymceEditor.getContent() : document.getElementById('post-content').value;
     
+    if (!title.trim()) {
+        alert('Please enter a title for the post.');
+        return;
+    }
+    
+    if (!date) {
+        alert('Please select a published date.');
+        return;
+    }
+    
+    if (!content.trim()) {
+        alert('Please enter content for the post.');
+        return;
+    }
+    
     console.log('Form data:', { title, date, content: content.substring(0, 100) + '...' });
     
     const postData = { title, published_date: date, content };
