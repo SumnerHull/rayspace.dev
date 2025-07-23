@@ -16,10 +16,10 @@ async function fetchPostsWithCache() {
   if (postsCache && postsCacheTime && (now - postsCacheTime) < CACHE_DURATION) {
     return postsCache;
   }
-  
+
   const response = await fetch("/api/posts");
   if (!response.ok) throw new Error("Failed to fetch posts");
-  
+
   postsCache = await response.json();
   postsCacheTime = now;
   return postsCache;
@@ -80,7 +80,7 @@ async function handleSubmit(event) {
   event.preventDefault();
   let commentInput = document.getElementById("comment-input");
   let comment = commentInput.value.trim();
-  
+
   if (comment !== "") {
     comment = DOMPurify.sanitize(comment);
     try {
@@ -127,20 +127,20 @@ async function logout() {
 async function fetchMetadataAndSetActiveLink(path) {
   const posts = await fetchPostsWithCache();
   let activeLink;
-  
+
   const blogPaths = posts.map(post => `/blog/${convertToDashed(post.title)}`);
-  
+
   if (blogPaths.includes(path)) {
     activeLink = document.querySelector('.nav-menu .nav-link[href="/blog"]');
   } else {
     activeLink = document.querySelector(`.nav-menu .nav-link[href="${path}"]`);
   }
-  
+
   if (activeLink) {
     activeLink.classList.add("active");
     loadPage(path);
   }
-  
+
   isPageFirstLoaded = false;
 }
 
@@ -154,18 +154,18 @@ function getCurrentUrl() {
 async function loadPage(path) {
   try {
     const currentPath = path || window.location.pathname;
-    
+
     if (currentPath.startsWith("/blog")) {
       const posts = await fetchPostsWithCache();
       const blogPaths = posts.map(post => `/blog/${convertToDashed(post.title)}`);
-      
+
       if (blogPaths.includes(currentPath)) {
         const postIndex = blogPaths.indexOf(currentPath);
         const postId = posts[postIndex].id;
         const postResponse = await fetch(`/posts/${postId}.html`);
-        
+
         if (!postResponse.ok) throw new Error("Failed to fetch post HTML");
-        
+
         const postHtml = await postResponse.text();
         document.querySelector(".main-content").innerHTML = postHtml;
         hljs.highlightAll();
@@ -187,7 +187,7 @@ async function fetchGuestbookComments() {
   try {
     const response = await fetch("/api/comments");
     if (!response.ok) throw new Error("Failed to fetch guestbook comments");
-    
+
     const comments = await response.json();
     if (Array.isArray(comments)) {
       displayComments(comments);
@@ -201,21 +201,21 @@ async function fetchGuestbookComments() {
 function displayComments(comments) {
   const commentsContainer = document.querySelector(".guestbook-comments");
   if (!commentsContainer) return;
-  
+
   commentsContainer.innerHTML = "";
-  
+
   [...comments].forEach(comment => {
     const commentElement = document.createElement("div");
     commentElement.classList.add("comment");
-    
+
     const nameElement = document.createElement("div");
     nameElement.classList.add("comment-name");
     nameElement.textContent = `${comment.name}: `;
-    
+
     const messageElement = document.createElement("div");
     messageElement.classList.add("comment-message");
     messageElement.textContent = comment.comment;
-    
+
     commentElement.appendChild(nameElement);
     commentElement.appendChild(messageElement);
     commentsContainer.appendChild(commentElement);
@@ -245,15 +245,15 @@ function loadPageContent(path) {
     "/admin": "./pages/admin.html",
     "/404": "./pages/404.html"
   };
-  
+
   const pagePath = pageMap[path];
-  
+
   if (pagePath) {
     fetch(pagePath)
       .then(response => response.text())
       .then(html => {
         document.querySelector(".main-content").innerHTML = html;
-        
+
         // Handle 404 page random blockquote
         if (path === "/404") {
           const blockquotes = document.querySelectorAll("blockquote");
@@ -262,17 +262,17 @@ function loadPageContent(path) {
             bq.style.display = index === randomIndex ? "block" : "none";
           });
         }
-        
+
         // Update meta title
         updateMetaTitle(capitalize(path.replace("/", "")));
-        
+
         // Handle blog links
         if (path === "/blog") {
           document.querySelectorAll(".post-link").forEach(link => {
             link.addEventListener("click", handleBlogLinkClick);
           });
         }
-        
+
         // Handle home links
         document.querySelectorAll(".home-link").forEach(link => {
           link.addEventListener("click", (e) => {
@@ -281,7 +281,7 @@ function loadPageContent(path) {
             if (navLink) navLink.click();
           });
         });
-        
+
         // Handle about page resume link
         if (path === "/about") {
           document.querySelector(".main-content").innerHTML = html;
@@ -295,26 +295,26 @@ function loadPageContent(path) {
             });
           }
         }
-        
+
         // Handle home page stats
         if (path === "/home" || path === "/") {
           fetchGithubStars();
           fetchTotalViews();
           fetchRecentSignee();
         }
-        
+
         // Handle guestbook page
         if (path === "/guestbook") {
           const inputContainer = document.querySelector(".input-container");
           const signOutButton = document.querySelector(".sign-out-button");
           const githubSignin = document.querySelector(".github-signin");
-          
+
           fetchUserStatus().then(userStatus => {
             if (userStatus.authenticated) {
               inputContainer.classList.remove("hidden");
               signOutButton.classList.remove("hidden");
               githubSignin.classList.add("hidden");
-              
+
               let commentForm = document.getElementById("comment-form");
               if (commentForm) {
                 commentForm.addEventListener("submit", handleSubmit);
@@ -325,10 +325,10 @@ function loadPageContent(path) {
               githubSignin.classList.remove("hidden");
             }
           });
-          
+
           fetchGuestbookComments();
         }
-        
+
         // Handle blog metadata
         if (path === "/blog") {
           fetchMetadata();
@@ -371,7 +371,7 @@ function updateMetaTitle(title) {
   const titleElement = document.querySelector("title");
   const siteName = "Ray Space";
   const siteUrl = root;
-  
+
   titleElement.text = title !== "Home" ? `${title} | Ray Space` : siteName;
   updateOGTags(siteName, "Full-Stack Software Engineer", siteUrl, "website");
 }
@@ -387,7 +387,7 @@ function updateOGTags(title, description, url, type) {
     'meta[name="twitter:title"]': title,
     'meta[name="twitter:description"]': description
   };
-  
+
   Object.entries(metaElements).forEach(([selector, content]) => {
     const element = document.querySelector(selector);
     if (element) {
@@ -400,26 +400,26 @@ function updateOGTags(title, description, url, type) {
 function copyToClipboard() {
   const codeElement = document.getElementById("code");
   if (!codeElement) return false;
-  
+
   const textarea = document.createElement("textarea");
   textarea.textContent = codeElement.textContent;
   textarea.style.position = "fixed";
   document.body.appendChild(textarea);
   textarea.select();
-  
+
   try {
     document.execCommand("copy");
   } catch (err) {
     return false;
   } finally {
     document.body.removeChild(textarea);
-    
+
     const copyIcon = document.getElementById("copy-icon");
     const checkmarkIcon = document.getElementById("checkmark-icon");
-    
+
     if (copyIcon) copyIcon.style.opacity = "0";
     if (checkmarkIcon) checkmarkIcon.style.opacity = "1";
-    
+
     setTimeout(function() {
       if (copyIcon) copyIcon.style.opacity = "1";
       if (checkmarkIcon) checkmarkIcon.style.opacity = "0";
@@ -432,68 +432,68 @@ async function fetchMetadata() {
   try {
     const posts = await fetchPostsWithCache();
     posts.sort((a, b) => a.id - b.id);
-    
+
     const titles = posts.map(post => post.title);
     const blogPaths = titles.map(title => `/blog/${convertToDashed(title)}`);
     const currentUrl = getCurrentUrl();
-    
+
     if (currentUrl === "/blog") {
       const postsContainer = document.querySelector(".posts");
       if (postsContainer) {
         postsContainer.innerHTML = "";
-        
+
         posts.forEach((post, index) => {
           const postElement = document.createElement("div");
           postElement.classList.add("post-list-item");
-          
+
           const titleElement = document.createElement("div");
           titleElement.classList.add("post-link");
           titleElement.textContent = post.title;
-          
+
           const viewsElement = document.createElement("div");
           viewsElement.classList.add("post-views");
           viewsElement.textContent = `${post.views.toLocaleString()} views`;
-          
+
           postElement.appendChild(titleElement);
           postElement.appendChild(viewsElement);
           postElement.href = blogPaths[index];
           postElement.addEventListener("click", handleBlogLinkClick);
-          
+
           postsContainer.appendChild(postElement);
         });
       }
     } else if (blogPaths.includes(currentUrl)) {
       const postIndex = blogPaths.indexOf(currentUrl);
       const title = titles[postIndex];
-      
+
       // Update post title
       document.querySelectorAll(".post-title").forEach(element => {
         element.textContent = title;
       });
-      
+
       // Create post info container
       const infoContainer = document.createElement("div");
       infoContainer.classList.add("post-info-container");
-      
+
       const dateElement = document.createElement("span");
       dateElement.classList.add("post-date");
       dateElement.textContent = posts[postIndex].published_date;
-      
+
       const viewsElement = document.createElement("span");
       viewsElement.classList.add("post-views");
       viewsElement.textContent = `${posts[postIndex].views.toLocaleString()} views`;
-      
+
       infoContainer.appendChild(dateElement);
       infoContainer.appendChild(viewsElement);
-      
+
       // Insert after post title
       const postTitle = document.querySelector(".post-title");
       if (postTitle && postTitle.parentNode) {
         postTitle.parentNode.insertBefore(infoContainer, postTitle.nextSibling);
       }
-      
+
       updateMetaTitle(title);
-      
+
       // Update OG tags for article
       const firstParagraph = document.getElementById("content").getElementsByTagName("p")[0];
       if (firstParagraph) {
@@ -509,23 +509,23 @@ async function fetchMetadata() {
 // Initialize page on load
 window.onload = () => {
   const currentUrl = getCurrentUrl();
-  
+
   if (currentUrl.startsWith("/blog")) {
     fetchMetadataAndSetActiveLink(currentUrl);
   } else {
     let activeLink;
-    
+
     if (currentUrl === "/resume") {
       activeLink = document.querySelector('.nav-menu .nav-link[href="/about"]');
     } else {
       activeLink = document.querySelector(`.nav-menu .nav-link[href="${currentUrl}"]`);
     }
-    
+
     if (activeLink) {
       activeLink.classList.add("active");
       loadPage(currentUrl);
     }
-    
+
     isPageFirstLoaded = false;
   }
 };
@@ -533,20 +533,20 @@ window.onload = () => {
 // Handle browser back/forward
 window.addEventListener("popstate", () => {
   const currentUrl = getCurrentUrl();
-  
+
   navLinks.forEach(link => link.classList.remove("active"));
-  
+
   if (currentUrl.startsWith("/blog")) {
     fetchMetadataAndSetActiveLink(currentUrl);
   } else {
     let activeLink;
-    
+
     if (currentUrl === "/resume") {
       activeLink = document.querySelector('.nav-menu .nav-link[href="/about"]');
     } else {
       activeLink = document.querySelector(`.nav-menu .nav-link[href="${currentUrl}"]`);
     }
-    
+
     if (activeLink) {
       activeLink.classList.add("active");
       loadPage(currentUrl);
@@ -560,14 +560,14 @@ navLinks.forEach(link => {
     e.preventDefault();
     navLinks.forEach(l => l.classList.remove("active"));
     link.classList.add("active");
-    
+
     const href = link.getAttribute("href");
     history.pushState(null, null, href);
-    
+
     if (href === "/home") {
       history.replaceState(null, null, "/");
     }
-    
+
     loadPage(href);
   });
 });
@@ -578,10 +578,10 @@ let currentEditingId = null;
 async function initTinyMCE() {
   if (typeof tinymce === 'undefined') {
     const script = document.createElement('script');
-    script.src = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js';
+    script.src = 'https://cdn.tiny.cloud/1/0e79us8oed499gm4n5zqxqet78r54d9cpf5sprqlfsr2ff4f/tinymce/7/tinymce.min.js';
     script.referrerpolicy = 'origin';
     document.head.appendChild(script);
-    
+
     script.onload = () => {
       tinymce.init({
         selector: '#post-content',
@@ -619,7 +619,7 @@ async function loadPostsList() {
   try {
     const response = await fetch('/api/posts');
     const posts = await response.json();
-    
+
     const container = document.getElementById('posts-container');
     container.innerHTML = posts.map(post => `
       <div class="post-list-item">
@@ -631,7 +631,7 @@ async function loadPostsList() {
         </div>
       </div>
     `).join('');
-    
+
     document.getElementById('posts-list').classList.remove('hidden');
     document.getElementById('post-form').classList.add('hidden');
   } catch (error) {
@@ -645,20 +645,20 @@ async function editPost(id) {
       fetch('/api/posts'),
       fetch(`/api/admin/posts/${id}`)
     ]);
-    
+
     const posts = await postResponse.json();
     const contentData = await contentResponse.json();
     const post = posts.find(p => p.id === id);
-    
+
     if (post) {
       document.getElementById('post-title').value = post.title;
       document.getElementById('post-date').value = post.published_date;
-      
+
       const parser = new DOMParser();
       const doc = parser.parseFromString(contentData.content, 'text/html');
       const contentDiv = doc.querySelector('.post-content');
       document.getElementById('post-content').value = contentDiv ? contentDiv.innerHTML : '';
-      
+
       document.getElementById('form-title').textContent = 'Edit Post';
       currentEditingId = id;
       showCreateForm();
@@ -700,25 +700,25 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const title = document.getElementById('post-title').value;
       const date = document.getElementById('post-date').value;
-      const content = typeof tinymce !== 'undefined' && tinymce.get('post-content') 
-        ? tinymce.get('post-content').getContent() 
+      const content = typeof tinymce !== 'undefined' && tinymce.get('post-content')
+        ? tinymce.get('post-content').getContent()
         : document.getElementById('post-content').value;
-      
+
       const postData = { title, published_date: date, content };
-      
+
       try {
         const url = currentEditingId ? `/api/admin/posts/${currentEditingId}` : '/api/admin/posts';
         const method = currentEditingId ? 'PUT' : 'POST';
-        
+
         const response = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(postData)
         });
-        
+
         if (response.ok) {
           hidePostForm();
           loadPostsList();
