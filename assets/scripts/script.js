@@ -456,7 +456,7 @@ async function fetchMetadata() {
           
           postElement.appendChild(titleElement);
           postElement.appendChild(viewsElement);
-          postElement.href = blogPaths[index];
+          postElement.setAttribute("href", blogPaths[index]);
           postElement.addEventListener("click", handleBlogLinkClick);
           
           postsContainer.appendChild(postElement);
