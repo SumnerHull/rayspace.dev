@@ -350,6 +350,13 @@ function handleBlogLinkClick(event) {
   loadPage(href);
 }
 
+function handlePostContainerClick(event) {
+  const postElement = event.target.closest('.post-list-item');
+  if (postElement && postElement.hasAttribute('href')) {
+    handleBlogLinkClick.call(postElement, event);
+  }
+}
+
 // Handle GitHub sign in
 function handleGithubSignIn(event) {
   event.preventDefault();
@@ -442,6 +449,9 @@ async function fetchMetadata() {
       if (postsContainer) {
         postsContainer.innerHTML = "";
         
+        postsContainer.removeEventListener("click", handlePostContainerClick);
+        postsContainer.addEventListener("click", handlePostContainerClick);
+        
         posts.forEach((post, index) => {
           const postElement = document.createElement("div");
           postElement.classList.add("post-list-item");
@@ -457,12 +467,11 @@ async function fetchMetadata() {
           postElement.appendChild(titleElement);
           postElement.appendChild(viewsElement);
           postElement.setAttribute("href", blogPaths[index]);
-          postElement.addEventListener("click", handleBlogLinkClick);
           
           postsContainer.appendChild(postElement);
         });
       }
-    } else if (blogPaths.includes(currentUrl)) {
+    }else if (blogPaths.includes(currentUrl)) {
       const postIndex = blogPaths.indexOf(currentUrl);
       const title = titles[postIndex];
       
