@@ -4,7 +4,7 @@
  */
 
 let isPageFirstLoaded = true;
-const root = "https://rayspace.dev";
+const root = "https://sumnerhull.com";
 const navLinks = document.querySelectorAll(".nav-menu .nav-link");
 
 let postsCache = null;
@@ -578,7 +578,7 @@ let currentEditingId = null;
 async function initTinyMCE() {
   if (typeof tinymce === 'undefined') {
     const script = document.createElement('script');
-    script.src = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js';
+    script.src = 'https://cdn.tiny.cloud/1/0e79us8oed499gm4n5zqxqet78r54d9cpf5sprqlfsr2ff4f/tinymce/7/tinymce.min.js';
     script.referrerpolicy = 'origin';
     document.head.appendChild(script);
     
