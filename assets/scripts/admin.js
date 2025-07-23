@@ -66,6 +66,7 @@ async function initTinyMCE() {
 
     tinymce.init({
         selector: '#post-content',
+        apiKey: '0e79us8oed499gm4n5zqxqet78r54d9cpf5sprqlfsr2ff4f',
         height: 400,
         menubar: false,
         plugins: [
