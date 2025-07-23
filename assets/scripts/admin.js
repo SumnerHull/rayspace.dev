@@ -49,9 +49,25 @@ function showLoginSection() {
 function setupEventListeners() {
     document.getElementById('create-post-btn').addEventListener('click', showCreateForm);
     document.getElementById('manage-posts-btn').addEventListener('click', loadPostsList);
-    document.getElementById('cancel-btn').addEventListener('click', hidePostForm);
-    document.getElementById('admin-post-form').addEventListener('submit', handleFormSubmit);
     document.getElementById('logout-btn').addEventListener('click', handleLogout);
+}
+
+async function verifyAuthBeforeSubmit() {
+    try {
+        const response = await fetch('/api/user_status');
+        const data = await response.json();
+        
+        if (!data.authenticated || !data.is_admin) {
+            alert('You are not authenticated as an admin. Please log in again.');
+            window.location.reload();
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        alert('Authentication check failed. Please try again.');
+        return false;
+    }
 }
 
 async function initTinyMCE() {
@@ -93,6 +109,19 @@ function showCreateForm() {
     
     currentEditingId = null;
     initTinyMCE();
+    
+    const form = document.getElementById('admin-post-form');
+    const cancelBtn = document.getElementById('cancel-btn');
+    
+    if (form) {
+        form.removeEventListener('submit', handleFormSubmit);
+        form.addEventListener('submit', handleFormSubmit);
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.removeEventListener('click', hidePostForm);
+        cancelBtn.addEventListener('click', hidePostForm);
+    }
 }
 
 function hidePostForm() {
@@ -185,9 +214,18 @@ async function deletePost(id) {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
+    console.log('=== Form Submission Started ===');
+    
+    const isAuthenticated = await verifyAuthBeforeSubmit();
+    if (!isAuthenticated) {
+        return;
+    }
+    
     const title = document.getElementById('post-title').value;
     const date = document.getElementById('post-date').value;
     const content = tinymceEditor ? tinymceEditor.getContent() : document.getElementById('post-content').value;
+    
+    console.log('Form data:', { title, date, content: content.substring(0, 100) + '...' });
     
     const postData = { title, published_date: date, content };
     
@@ -195,23 +233,36 @@ async function handleFormSubmit(e) {
         const url = currentEditingId ? `/api/posts/${currentEditingId}` : '/api/posts';
         const method = currentEditingId ? 'PUT' : 'POST';
         
+        console.log('Making API request:', method, url);
+        
         const response = await fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(postData)
         });
         
+        console.log('API Response:', response.status, response.statusText);
+        
         if (response.ok) {
+            const result = await response.json();
+            console.log('Success response:', result);
             hidePostForm();
             loadPostsList();
             alert(currentEditingId ? 'Post updated successfully!' : 'Post created successfully!');
         } else {
-            const error = await response.text();
-            alert(`Failed to save post: ${error}`);
+            const errorText = await response.text();
+            console.error('API Error Response:', response.status, errorText);
+            
+            if (response.status === 401) {
+                alert('Authentication required. Please log in again.');
+                window.location.reload();
+            } else {
+                alert(`Failed to save post: ${errorText}`);
+            }
         }
     } catch (error) {
-        console.error('Failed to save post:', error);
-        alert('Failed to save post');
+        console.error('Network/JavaScript Error:', error);
+        alert(`Failed to save post: ${error.message}`);
     }
 }
 
