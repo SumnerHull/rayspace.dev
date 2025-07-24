@@ -95,6 +95,10 @@ fn main() -> std::io::Result<()> {
                 .route("/tools", web::get().to(not_found))
                 // Remove the /tools route - let JavaScript handle it
                 .service(
+                    fs::Files::new("/posts", "./assets/posts")
+                        .use_last_modified(true),
+                )
+                .service(
                     fs::Files::new("/", "./frontend/out")
                         .index_file("index.html")
                         .use_last_modified(true),
