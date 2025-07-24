@@ -143,3 +143,31 @@ export function useComments() {
 
   return { comments, loading, error, refetch }
 }
+
+export function usePost(id: string) {
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchPost = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE}/posts/${id}.html`);
+        if (!response.ok) throw new Error('Failed to fetch post');
+        const htmlContent = await response.text();
+        setPost({ content: htmlContent });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch post');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [id]);
+
+  return { post, loading, error };
+}
